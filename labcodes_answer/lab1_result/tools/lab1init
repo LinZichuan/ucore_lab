@@ -4,3 +4,6 @@ set architecture i8086
 b *0x7c00
 continue
 x /2i $pc
+define hook-stop
+x/i $pc
+end
