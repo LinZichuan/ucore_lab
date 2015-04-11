@@ -394,7 +394,7 @@ get_pte(pde_t *pgdir, uintptr_t la, bool create) {
     return NULL;          // (8) return page table entry
 #endif
     pde_t *pdep = &pgdir[PDX(la)];
-    if (!(*pdep & PTE_P)) {
+    if (!(*pdep & PTE_P)) {   //not present //if the pt not exist
         struct Page *page;
         if (!create || (page = alloc_page()) == NULL) {
             return NULL;

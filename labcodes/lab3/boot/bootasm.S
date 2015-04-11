@@ -68,7 +68,7 @@ finish_probe:
     # effective memory map does not change during the switch.
     lgdt gdtdesc
     movl %cr0, %eax
-    orl $CR0_PE_ON, %eax
+    orl $CR0_PE_ON, %eax  #enable protection flag
     movl %eax, %cr0
 
     # Jump to next instruction, but in 32-bit code segment.

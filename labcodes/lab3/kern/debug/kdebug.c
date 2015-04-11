@@ -293,7 +293,7 @@ read_eip(void) {
  * */
 void
 print_stackframe(void) {
-    uint32_t ebp = read_ebp();
+    uint32_t ebp = read_ebp();//ebp is value which points to the base of current function stack
     uint32_t eip = read_eip();
     int i, j;
     for (i=0; i<STACKFRAME_DEPTH && ebp!=0; ++i){
@@ -304,9 +304,9 @@ print_stackframe(void) {
         }
         cprintf("\n");
         print_debuginfo(eip-1);
-        eip = *(((uint32_t*)ebp)+4);
-        ebp = *((uint32_t*)ebp);
-        
+        eip = *(((uint32_t*)ebp)+4);//eip is up to ebp, because eip is "return code"
+        ebp = *((uint32_t*)ebp);//A = the space which ebp point to, the value in A point to last function stack base
+        //let ebp be last function's base
     }
      /* LAB1 2012011322 : STEP 1 */
      /* (1) call read_ebp() to get the value of ebp. the type is (uint32_t);

@@ -58,7 +58,7 @@ mm_create(void) {
 // vma_create - alloc a vma_struct & initialize it. (addr range: vm_start~vm_end)
 struct vma_struct *
 vma_create(uintptr_t vm_start, uintptr_t vm_end, uint32_t vm_flags) {
-    struct vma_struct *vma = kmalloc(sizeof(struct vma_struct));
+    struct vma_struct *vma = kmalloc(sizeof(struct vma_struct));//alloc a page and return the kva
 
     if (vma != NULL) {
         vma->vm_start = vm_start;
@@ -117,7 +117,7 @@ insert_vma_struct(struct mm_struct *mm, struct vma_struct *vma) {
         while ((le = list_next(le)) != list) {
             struct vma_struct *mmap_prev = le2vma(le, list_link);
             if (mmap_prev->vm_start > vma->vm_start) {
-                break;
+                break;  //garantee that all vma is sorted . 
             }
             le_prev = le;
         }
@@ -188,9 +188,9 @@ check_vma_struct(void) {
     }
 
     for (i = step1 + 1; i <= step2; i ++) {
-        struct vma_struct *vma = vma_create(i * 5, i * 5 + 2, 0);
+        struct vma_struct *vma = vma_create(i * 5, i * 5 + 2, 0); //start, end, flag
         assert(vma != NULL);
-        insert_vma_struct(mm, vma);
+        insert_vma_struct(mm, vma);  //insert vma into mm->mmap_list
     }
 
     list_entry_t *le = list_next(&(mm->mmap_list));
@@ -247,25 +247,25 @@ check_pgfault(void) {
     pde_t *pgdir = mm->pgdir = boot_pgdir;
     assert(pgdir[0] == 0);
 
-    struct vma_struct *vma = vma_create(0, PTSIZE, VM_WRITE);
+    struct vma_struct *vma = vma_create(0, PTSIZE, VM_WRITE); //4096*1024
     assert(vma != NULL);
 
     insert_vma_struct(mm, vma);
 
     uintptr_t addr = 0x100;
-    assert(find_vma(mm, addr) == vma);
+    assert(find_vma(mm, addr) == vma);  //addr is in (vma->start, vma->end)
 
     int i, sum = 0;
     for (i = 0; i < 100; i ++) {
-        *(char *)(addr + i) = i;
+        *(char *)(addr + i) = i; // test write 
         sum += i;
     }
     for (i = 0; i < 100; i ++) {
-        sum -= *(char *)(addr + i);
+        sum -= *(char *)(addr + i); //test read
     }
     assert(sum == 0);
 
-    page_remove(pgdir, ROUNDDOWN(addr, PGSIZE));
+    page_remove(pgdir, ROUNDDOWN(addr, PGSIZE)); //let addr align(can be devided by pgsize)
     free_page(pa2page(pgdir[0]));
     pgdir[0] = 0;
 
@@ -369,7 +369,7 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
     ptep = get_pte(mm->pgdir, addr, 1);              //(1) try to find a pte, if pte's PT(Page Table) isn't existed, then create a PT.
     if (*ptep == 0) {
                             //(2) if the phy addr isn't exist, then alloc a page & map the phy addr with logical addr
-        pgdir_alloc_page(mm->pgdir, addr, perm-);
+        pgdir_alloc_page(mm->pgdir, addr, perm);
     }
     else {
     /*LAB3 EXERCISE 2: 2012011322
@@ -389,15 +389,15 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
                                     //    into the memory which page managed.
                                     //(2) According to the mm, addr AND page, setup the map of phy addr <---> logical addr
                                     //(3) make the page swappable.
-            swap_in(mm, addr, &page);
-            page_insert(mm->pgdir, page, addr, perm);
+            swap_in(mm, addr, &page);  //swap to disk content into page(which is in the memory)
+            page_insert(mm->pgdir, page, addr, perm); //map the pte_addr => page
             swap_map_swappable(mm, addr, page, 1);
         }
         else {
             cprintf("no swap_init_ok but ptep is %x, failed\n",*ptep);
             goto failed;
         }
-   }
+    }
 #endif
    /*
    if ((ptep = get_pte(mm->pgdir, addr, 1)) == NULL) {
