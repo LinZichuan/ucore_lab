@@ -31,8 +31,10 @@ schedule(void) {
         if (next == NULL || next->state != PROC_RUNNABLE) {
             next = idleproc;
         }
+        
         next->runs ++;
         if (next != current) {
+            cprintf("PROC%d RUN\n", next->pid);
             proc_run(next);
         }
     }

@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
+int thread_num = 0;
 /* ------------- process/thread mechanism design&implementation -------------
 (an simplified Linux process/thread mechanism )
 introduction:
@@ -166,7 +167,7 @@ proc_run(struct proc_struct *proc) {
             current = proc;
             load_esp0(next->kstack + KSTACKSIZE);
             lcr3(next->cr3);
-            switch_to(&(prev->context), &(next->context));
+            switch_to(&(prev->context), &(next->context));// switch eip
         }
         local_intr_restore(intr_flag);
     }
@@ -201,6 +202,8 @@ find_proc(int pid) {
 //       proc->tf in do_fork-->copy_thread function
 int
 kernel_thread(int (*fn)(void *), void *arg, uint32_t clone_flags) {
+    cprintf("create thread %d\n", thread_num) ;
+    thread_num++;
     struct trapframe tf;
     memset(&tf, 0, sizeof(struct trapframe));
     tf.tf_cs = KERNEL_CS;
@@ -327,8 +330,10 @@ repeat:
 	}
     if (haskid) {
 		cprintf("do_wait: has kid begin\n");
-        current->state = PROC_SLEEPING;
+        current->state = PROC_SLEEPING; 
+        cprintf("PROC %d SLEEPING\n", pid);
         current->wait_state = WT_CHILD;
+        cprintf("PROC %d WT_CHILD\n", pid);
         schedule();
         goto repeat;
     }
@@ -361,6 +366,7 @@ do_exit(int error_code) {
 	cprintf(" do_exit: proc pid %d will exit\n", current->pid);
 	cprintf(" do_exit: proc  parent %x\n", current->parent);
     current->state = PROC_ZOMBIE;
+    cprintf("PROC %d ZOMBIE\n", current->pid);
 	bool intr_flag;
     struct proc_struct *proc;
     local_intr_save(intr_flag);
@@ -386,11 +392,12 @@ init_main(void *arg) {
     return 0;
 }
 
+
 // proc_init - set up the first kernel thread idleproc "idle" by itself and 
 //           - create the second kernel thread init_main
 void
 proc_init(void) {
-    int i;
+    //int i;
 
     list_init(&proc_list);
 
@@ -401,7 +408,7 @@ proc_init(void) {
     idleproc->pid = 0;
     idleproc->state = PROC_RUNNABLE;
     idleproc->kstack = (uintptr_t)bootstack;
-    idleproc->need_resched = 1;
+    idleproc->need_resched = 1; //need release CPU
     set_proc_name(idleproc, "idle");
     nr_process ++;
 
@@ -409,6 +416,8 @@ proc_init(void) {
 
     int pid1= kernel_thread(init_main, "init main1: Hello world!!", 0);
     int pid2= kernel_thread(init_main, "init main2: Hello world!!", 0);
+
+    //schedule();
     if (pid1 <= 0 || pid2<=0) {
         panic("create kernel thread init_main1 or 2 failed.\n");
     }
