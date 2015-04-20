@@ -51,7 +51,7 @@ list_init(list_entry_t *elm) {
  * is already in the list.
  * */
 static inline void
-list_add(list_entry_t *listelm, list_entry_t *elm) {
+t(list_entry_t *listelm, list_entry_t *elm) {
     list_add_after(listelm, elm);
 }
 
