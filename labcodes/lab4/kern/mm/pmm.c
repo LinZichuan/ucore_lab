@@ -397,17 +397,18 @@ get_pte(pde_t *pgdir, uintptr_t la, bool create) {
     return NULL;          // (8) return page table entry
 #endif
     pde_t *pdep = &pgdir[PDX(la)];
-    if (!(*pdep & PTE_P)) {   //not present //if the pt not exist
+    if (!(*pdep & PTE_P)) {
         struct Page *page;
-        if (!create || (page = alloc_page()) == NULL) {
+        if (!create || (page=alloc_page())==NULL ){
             return NULL;
         }
         set_page_ref(page, 1);
         uintptr_t pa = page2pa(page);
-        memset(KADDR(pa), 0, PGSIZE);
-        *pdep = pa | PTE_U | PTE_W | PTE_P;
+        memset(KADDR(pa), 0, PGSIZE); //let the hardware to do the memset   code just use the va, not use the pa
+        //va -> pa  are all tranmitted by the hardware automally
+        *pdep = pa | PTE_P | PTE_W | PTE_U;
     }
-    return &((pte_t *)KADDR(PDE_ADDR(*pdep)))[PTX(la)];
+    return &((pte_t *)KADDR(PDE_ADDR(*pdep)))[PTX(la)];//
 }
 
 //get_page - get related Page struct for linear address la using PDT pgdir

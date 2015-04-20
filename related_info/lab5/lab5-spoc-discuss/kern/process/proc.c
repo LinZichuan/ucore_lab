@@ -210,12 +210,12 @@ proc_run(struct proc_struct *proc) {
         local_intr_save(intr_flag);
         {
             current = proc;
-            cprintf("switch kstack from %d to %d!\n", current->pid, next->pid);
+            //cprintf("switch kstack from %d to %d!\n", current->pid, next->pid);
             load_esp0(next->kstack + KSTACKSIZE);
-            cprintf("switch cr3 from %d to %d!\n", current->pid, next->pid);
+            //cprintf("switch cr3 from %d to %d!\n", current->pid, next->pid);
             lcr3(next->cr3);  //will change the proc!!!
             switch_to(&(prev->context), &(next->context));
-            cprintf("switch context from %d to %d!\n", current->pid, next->pid);
+            //cprintf("switch context from %d to %d!\n", current->pid, next->pid);
         }
         local_intr_restore(intr_flag);
     }
