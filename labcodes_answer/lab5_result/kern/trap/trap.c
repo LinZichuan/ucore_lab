@@ -31,7 +31,7 @@ static void print_ticks() {
  *
  * Must be built at run time because shifted function addresses can't
  * be represented in relocation records.
- * */
+ * */   
 static struct gatedesc idt[256] = {{0}};
 
 static struct pseudodesc idt_pd = {
