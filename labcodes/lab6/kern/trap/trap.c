@@ -54,9 +54,22 @@ idt_init(void) {
       *     You don't know the meaning of this instruction? just google it! and check the libs/x86.h to know more.
       *     Notice: the argument of lidt is idt_pd. try to find it!
       */
-     /* LAB5 YOUR CODE */ 
+     /* LAB5 2012011322 */ 
      //you should update your lab1 code (just add ONE or TWO lines of code), let user app to use syscall to get the service of ucore
      //so you should setup the syscall interrupt gate in here
+      extern uintptr_t __vectors[];
+      //init every idt[i] using __vector[i] 
+      int i;
+      for (i=0; i<sizeof(idt)/sizeof(struct gatedesc); ++i) {
+            //gate; 1-exception,0-interrupt; segment selection; offset; Descriptor Privilege Level
+            SETGATE(idt[i], 0, GD_KTEXT, __vectors[i], DPL_KERNEL);
+      }
+      //set from user to kernel  
+      //SETGATE(idt[T_SWITCH_TOK], 0, GD_KTEXT, __vectors[T_SWITCH_TOK], DPL_USER); ///!!!!!!!!
+      //in lab5 , set the syscall interrupt , change line above
+      SETGATE(idt[T_SYSCALL], 1, GD_KTEXT, __vectors[T_SYSCALL], DPL_USER);
+      //load IDT
+      lidt(&idt_pd);
 }
 
 static const char *
@@ -189,6 +202,7 @@ trap_dispatch(struct trapframe *tf) {
 
     int ret=0;
 
+    extern void sched_class_proc_tick(struct proc_struct *proc);
     switch (tf->tf_trapno) {
     case T_PGFLT:  //page fault
         if ((ret = pgfault_handler(tf)) != 0) {
@@ -232,6 +246,13 @@ trap_dispatch(struct trapframe *tf) {
          *    Every tick, you should update the system time, iterate the timers, and trigger the timers which are end to call scheduler.
          *    You can use one funcitons to finish all these things.
          */
+         ticks++;
+        //if (ticks % TICK_NUM == 0) {
+            //print_ticks();
+            assert(current != NULL);
+            sched_class_proc_tick(current);
+            //current->need_resched = 1; /////lab5
+        //}
         break;
     case IRQ_OFFSET + IRQ_COM1:
         c = cons_getc();
