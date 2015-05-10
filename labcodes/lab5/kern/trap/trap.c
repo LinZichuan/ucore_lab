@@ -239,8 +239,9 @@ trap_dispatch(struct trapframe *tf) {
          */
         ticks++;
         if (ticks % TICK_NUM == 0) {
-            print_ticks();
+            //print_ticks();
             assert(current != NULL);
+            //run_timer_list();
             current->need_resched = 1; /////lab5
         }
         break;
