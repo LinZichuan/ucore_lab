@@ -353,7 +353,7 @@ check_pgfault(void) {
     assert(sum == 0);
 
     page_remove(pgdir, ROUNDDOWN(addr, PGSIZE));
-    free_page(pa2page(pgdir[0]));
+    free_page(pde2page(pgdir[0]));
     pgdir[0] = 0;
 
     mm->pgdir = NULL;
@@ -451,15 +451,15 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
     *   mm->pgdir : the PDT of these vma
     *
     */
-#if 1
-    /*LAB3 EXERCISE 1: 2012011322*/
-    ptep = get_pte(mm->pgdir, addr, 1);              //(1) try to find a pte, if pte's PT(Page Table) isn't existed, then create a PT.
+#if 0
+    /*LAB3 EXERCISE 1: YOUR CODE*/
+    ptep = ???              //(1) try to find a pte, if pte's PT(Page Table) isn't existed, then create a PT.
     if (*ptep == 0) {
                             //(2) if the phy addr isn't exist, then alloc a page & map the phy addr with logical addr
-        pgdir_alloc_page(mm->pgdir, addr, perm);
+
     }
     else {
-    /*LAB3 EXERCISE 2: 2012011322
+    /*LAB3 EXERCISE 2: YOUR CODE
     * Now we think this pte is a  swap entry, we should load data from disk to a page with phy addr,
     * and map the phy addr with logical addr, trigger swap manager to record the access situation of this page.
     *
@@ -485,16 +485,13 @@ do_pgfault(struct mm_struct *mm, uint32_t error_code, uintptr_t addr) {
                                     //    into the memory which page managed.
                                     //(2) According to the mm, addr AND page, setup the map of phy addr <---> logical addr
                                     //(3) make the page swappable.
-									//(4) [NOTICE]: you myabe need to update your lab3's implementation for LAB5's normal execution.            
-			swap_in(mm, addr, &page);  //swap to disk content into page(which is in the memory)
-            page_insert(mm->pgdir, page, addr, perm); //map the pte_addr => page
-            swap_map_swappable(mm, addr, page, 1);
+                                    //(4) [NOTICE]: you myabe need to update your lab3's implementation for LAB5's normal execution.
         }
         else {
             cprintf("no swap_init_ok but ptep is %x, failed\n",*ptep);
             goto failed;
         }
-    }
+   }
 #endif
    ret = 0;
 failed:
